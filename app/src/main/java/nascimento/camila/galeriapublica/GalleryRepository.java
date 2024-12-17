@@ -15,20 +15,25 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import nascimento.camila.galeriapublica.ImageData;
+import nascimento.camila.galeriapublica.Util;
+
 public class GalleryRepository {
     Context context;
     public GalleryRepository(Context context) {
         this.context = context;
     }
-    public List<ImageData> loadImageData(Integer limit, Integer offSet) throws FileNotFoundException {
+    public List<ImageData> loadImageData(Integer limit, Integer
+            offSet) throws FileNotFoundException {
+
         List<ImageData> imageDataList = new ArrayList<>();
-        int w = (int)100;
-        int h = (int)100;
-        String[] projection = new String[]
-                {MediaStore.Images.Media._ID,
-                        MediaStore.Images.Media.DISPLAY_NAME,
-                        MediaStore.Images.Media.DATE_ADDED,
-                        MediaStore.Images.Media.SIZE};
+        int w = (int) 100;
+        int h = (int) 100;
+
+        String[] projection = new String[]{MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DISPLAY_NAME,
+                MediaStore.Images.Media.DATE_ADDED,
+                MediaStore.Images.Media.SIZE};
         String selection = null;
         String selectionArgs[] = null;
         String sort = MediaStore.Images.Media.DATE_ADDED;
@@ -37,31 +42,51 @@ public class GalleryRepository {
             Bundle queryArgs = new Bundle();
             queryArgs.putString(ContentResolver.QUERY_ARG_SQL_SELECTION, selection);
             queryArgs.putStringArray(ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, selectionArgs);
-            queryArgs.putString(
-                    ContentResolver.QUERY_ARG_SORT_COLUMNS, sort
+            // sort
+            queryArgs.putString(ContentResolver.QUERY_ARG_SORT_COLUMNS, sort
             );
-            queryArgs.putInt(
-                    ContentResolver.QUERY_ARG_SORT_DIRECTION,
-                    ContentResolver.QUERY_SORT_DIRECTION_ASCENDING);
+            queryArgs.putInt(ContentResolver.QUERY_ARG_SORT_DIRECTION,
+                    ContentResolver.QUERY_SORT_DIRECTION_ASCENDING
+            );
+            // limit, offset
             queryArgs.putInt(ContentResolver.QUERY_ARG_LIMIT, limit);
             queryArgs.putInt(ContentResolver.QUERY_ARG_OFFSET, offSet);
-            cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, queryArgs, null);
+            cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    queryArgs,
+                    null
+            );
         }
         else {
-            cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, projection, selection, selectionArgs, sort + " ASC + LIMIT " + String.valueOf(limit) + " OFFSET " + String.valueOf(offSet));
+            cursor = context.getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    sort + " ASC + LIMIT " + String.valueOf(limit) + " OFFSET " + String.valueOf(offSet)
+            );
         }
-        int idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
-        int nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
-        int dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED);
-        int sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE);
+
+        int idColumn =
+                cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID);
+        int nameColumn =
+                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME);
+        int dateAddedColumn =
+                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED);
+        int sizeColumn =
+                cursor.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE);
         while (cursor.moveToNext()) {
+            // Get values of columns for a given image.
             long id = cursor.getLong(idColumn);
-            Uri contentUri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
+            Uri contentUri = ContentUris.withAppendedId(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id);
             String name = cursor.getString(nameColumn);
             int dateAdded = cursor.getInt(dateAddedColumn);
             int size = cursor.getInt(sizeColumn);
             Bitmap thumb = Util.getBitmap(context, contentUri, w, h);
-            imageDataList.add(new ImageData(contentUri, thumb, name, new Date(dateAdded*1000L), size));
+            // Stores column values and the contentUri in a local object
+            // that represents the media file.
+            imageDataList.add(new ImageData(contentUri, thumb, name,
+                    new Date(dateAdded*1000L), size));
         }
         return imageDataList;
     }

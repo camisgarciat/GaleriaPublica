@@ -14,26 +14,29 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
-public class GalleryPagingSource extends ListenableFuturePagingSource <Integer, ImageData> {
+public class GalleryPagingSource extends ListenableFuturePagingSource<Integer, ImageData> {
     GalleryRepository galleryRepository;
     Integer initialLoadSize = 0;
+
     public GalleryPagingSource(GalleryRepository galleryRepository) {
         this.galleryRepository = galleryRepository;
     }
     @Nullable
     @Override
-    public Integer getRefreshKey(@NonNull PagingState<Integer, ImageData> pagingState) {
+    public Integer getRefreshKey(@NonNull PagingState<Integer,
+            ImageData> pagingState) {
         return null;
     }
+
     @NonNull
     @Override
-    public ListenableFuture<LoadResult<Integer, ImageData>>
-    loadFuture(@NonNull LoadParams<Integer> loadParams) {
+    public ListenableFuture<LoadResult<Integer, ImageData>> loadFuture(@NonNull LoadParams<Integer> loadParams) {
         Integer nextPageNumber = loadParams.getKey();
         if (nextPageNumber == null) {
             nextPageNumber = 1;
             initialLoadSize = loadParams.getLoadSize();
         }
+
         Integer offSet = 0;
         if(nextPageNumber == 2) {
             offSet = initialLoadSize;
@@ -41,8 +44,9 @@ public class GalleryPagingSource extends ListenableFuturePagingSource <Integer, 
         else {
             offSet = ((nextPageNumber - 1) * loadParams.getLoadSize()) + (initialLoadSize - loadParams.getLoadSize());
         }
-        ListeningExecutorService service =
-                MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+
+        ListeningExecutorService service = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
+
         Integer finalOffSet = offSet;
         Integer finalNextPageNumber = nextPageNumber;
         ListenableFuture<LoadResult<Integer, ImageData>> lf = service.submit(new Callable<LoadResult<Integer, ImageData>>() {
@@ -52,15 +56,16 @@ public class GalleryPagingSource extends ListenableFuturePagingSource <Integer, 
                 try {
                     imageDataList = galleryRepository.loadImageData(loadParams.getLoadSize(), finalOffSet);
                     Integer nextKey = null;
-                    if(imageDataList.size() >= loadParams.getLoadSize()) {
-                        nextKey = finalNextPageNumber + 1;
+                    if(imageDataList.size() >= loadParams.getLoadSize()) { nextKey = finalNextPageNumber + 1;
                     }
-                    return new LoadResult.Page<Integer, ImageData>(imageDataList, null, nextKey);
+                    return new LoadResult.Page<Integer, ImageData>(imageDataList,
+                            null,
+                            nextKey);
                 } catch (FileNotFoundException e) {
                     return new LoadResult.Error<>(e);
                 }
             }
- });
+        });
         return lf;
     }
 }
