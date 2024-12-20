@@ -53,7 +53,7 @@ public class GridViewFragment extends Fragment {
         rvGallery.setAdapter(gridAdapter);
         float w = 100;
         int numberOfColumns = Util.calculateNoOfColumns(getContext(), w);
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), numberOfColumns);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(getContext(), 4);
         rvGallery.setLayoutManager(gridLayoutManager);
     }
 }
